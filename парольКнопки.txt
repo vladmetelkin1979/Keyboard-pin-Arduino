@@ -1,4 +1,3 @@
-#define modePin 11   // Пин переключателя режима
 #define relayPin 13  // Номер контакта привода замка
 #define errorPin 12  // Номер контакта блокировки замка
 
@@ -55,8 +54,7 @@ int readButt() {
 
 void setup() {
   pinMode(relayPin, OUTPUT);       // выход на исп. механизм
-  pinMode(errorPin, OUTPUT);       // выход на исп. механизм
-  pinMode(modePin, INPUT_PULLUP);  // перекл. режимов Цикл настройки режимов контактов кнопок:
+  pinMode(errorPin, OUTPUT);       // выход на исп. механизм  
   for (int ButtonPin = 2; ButtonPin <= 5; ButtonPin++) {
     pinMode(ButtonPin, INPUT_PULLUP);
   };
