@@ -1,0 +1,80 @@
+#define modePin 11   // Пин переключателя режима
+#define relayPin 13  // Номер контакта привода замка
+#define errorPin 12  // Номер контакта блокировки замка
+
+const int amountButtons = 4;      // количество кнопок
+byte arrButtons[amountButtons];   // массив кнопок/буфер для ввода кода
+const int myByte = 15;            // десятичное представление при ненажатых кнопках (В1111)
+int count = 0;                    // счетчик набора клавиш
+byte readButton = 0;              // счетчик чтения кнопок
+int pass[4] = { 13, 11, 14, 7 };  // пароль, кнопки 3-4-2-5 (1011-1101-0111-1110)
+
+// сброс набранных паролей
+void resetButtons() {
+  for (int i = 0; i < amountButtons; i++) {
+    arrButtons[i] = 0;
+  }
+}
+
+// открытие/закрытие замка
+void lockUnlock(int status) {
+  digitalWrite(status, HIGH);
+  delay(5000);
+  digitalWrite(status, LOW);
+}
+
+// проверка кода
+boolean compare(byte arr[4]) {
+  boolean checkPass = true;
+  for (int i = 0; i < count; i++) {
+    if (arr[i] != pass[i]) {
+      checkPass = false;
+      break;
+    }
+  }
+  return checkPass;
+}
+
+// проверка нажатий клавиш
+boolean checkPress(byte current) {
+  if (current != myByte) {
+    delay(230);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// чтение кнопок
+int readButt() {
+  for (int i = 0; i < amountButtons; i++) {
+    bitWrite(readButton, i, digitalRead(i + 2));
+  }
+  return readButton;
+}
+
+void setup() {
+  pinMode(relayPin, OUTPUT);       // выход на исп. механизм
+  pinMode(errorPin, OUTPUT);       // выход на исп. механизм
+  pinMode(modePin, INPUT_PULLUP);  // перекл. режимов Цикл настройки режимов контактов кнопок:
+  for (int ButtonPin = 2; ButtonPin <= 5; ButtonPin++) {
+    pinMode(ButtonPin, INPUT_PULLUP);
+  };
+}
+
+void loop() {
+  byte current = readButt();            //читаем все кнопки
+  boolean check = checkPress(current);  // проверка нажатий
+  if (check == true) {                  // если нажатие было
+    arrButtons[count] = current;        // меняем значение предыдущего состояния кнопки
+    count++;
+  }
+  if (count == amountButtons) {                                           // если набрано 4 клавиши
+    byte compareResult = compare(arrButtons);                             // сравниваем с паролем
+    compareResult == true ? lockUnlock(relayPin) : lockUnlock(errorPin);  // если правильно, открываем
+    resetButtons();                                                       //сбрасываем буфер набора и счетчика
+    count = 0;
+  } else {
+    return;
+  }
+}
